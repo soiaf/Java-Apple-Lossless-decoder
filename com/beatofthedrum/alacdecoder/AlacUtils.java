@@ -124,7 +124,7 @@ public class AlacUtils
 	
 	// Heres where we extract the actual music data
 	
-	public static int AlacUnpackSamples(AlacContext ac, int[] pDestBuffer)
+	public static DecodeResult AlacUnpackSamples(AlacContext ac, int[] pDestBuffer)
 	{
 		int sample_duration = 0;
 		int sample_byte_size = 0;
@@ -134,6 +134,7 @@ public class AlacUtils
 		int destBufferSize = 1024 *24 * 3; // 24kb buffer = 4096 frames = 1 alac sample (we support max 24bps)
 		int outputBytes = 0;
 		MyStream inputStream = new MyStream();
+        DecodeResult result = new DecodeResult();
 		
 		inputStream.stream = ac.input_stream;
 		
@@ -141,13 +142,13 @@ public class AlacUtils
 		
 		if(ac.current_sample_block >= ac.demux_res.num_sample_byte_sizes)
 		{
-			return(0);
+			return result;
 		}
 		
 		if (get_sample_info(ac.demux_res, ac.current_sample_block , sampleinfo) == 0)
 		{
 			// getting sample failed
-				return (0);
+				return result;
 		}
 
 		sample_duration = sampleinfo.sample_duration;
@@ -161,8 +162,10 @@ public class AlacUtils
 		outputBytes = AlacDecodeUtils.decode_frame(ac.alac, buffer, pDestBuffer, outputBytes);
 		
 		ac.current_sample_block = ac.current_sample_block + 1;
-		
-		return (outputBytes);
+		result.bytesUnpacked = outputBytes - ac.offset * AlacGetBytesPerSample(ac);
+        result.offset = ac.offset;
+        ac.offset = 0;
+		return result;
 	
 	}
 	
@@ -318,6 +321,7 @@ public class AlacUtils
                     if (position < current_position) {
                         ac.input_stream.seek(pos);
                         ac.current_sample_block = current_sample;
+                        ac.offset = (int) (position - (current_position - sample_info.sample_duration)) * AlacGetNumChannels(ac);
                         return;
                     }
                     pos += sample_info.sample_byte_size;

@@ -127,9 +127,7 @@ class DecoderDemo
 		
 		while (true)
 		{
-			bytes_unpacked = 0;
-
-			bytes_unpacked = AlacUtils.AlacUnpackSamples(ac, pDestBuffer);
+			bytes_unpacked = AlacUtils.AlacUnpackSamples(ac, pDestBuffer).bytesUnpacked;
 
 			total_unpacked_bytes += bytes_unpacked;
 

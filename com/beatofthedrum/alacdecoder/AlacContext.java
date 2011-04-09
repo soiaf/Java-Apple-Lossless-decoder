@@ -17,6 +17,7 @@ public class AlacContext
 	AlacFile alac = new AlacFile();
 	AlacInputStream input_stream;
 	int current_sample_block = 0;
+    int offset;
 	public boolean error;
 	public String error_message = "";
 }
