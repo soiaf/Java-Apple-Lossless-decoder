@@ -15,7 +15,7 @@ public class AlacContext
 {
 	DemuxResT demux_res = new DemuxResT();
 	AlacFile alac = new AlacFile();
-	java.io.DataInputStream input_stream;
+	AlacInputStream input_stream;
 	int current_sample_block = 0;
 	public boolean error;
 	public String error_message = "";

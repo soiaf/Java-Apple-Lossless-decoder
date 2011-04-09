@@ -30,6 +30,9 @@ class DemuxResT
 
 	public int[] codecdata = new int[1024];
 
+    public int[] stco;
+    public ChunkInfo[] stsc;
+
 	public int mdat_len;
 	
 	public DemuxResT()

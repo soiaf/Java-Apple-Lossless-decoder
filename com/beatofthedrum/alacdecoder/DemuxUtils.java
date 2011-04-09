@@ -517,13 +517,11 @@ class DemuxUtils
 			}
 			else if(sub_chunk_id ==  MakeFourCC32(115,116,115,99) )	// fourcc equals stsc
 			{
-				/* skip these, no indexing for us! */
-				StreamUtils.stream_skip(qtmovie.qtstream, sub_chunk_len - 8);
+				read_chunk_stsc(qtmovie, sub_chunk_len);
 			}
 			else if(sub_chunk_id ==  MakeFourCC32(115,116,99,111) )	// fourcc equals stco
 			{
-				/* skip these, no indexing for us! */
-				StreamUtils.stream_skip(qtmovie.qtstream, sub_chunk_len - 8);
+				read_chunk_stco(qtmovie, sub_chunk_len);
 			}
 			else
 			{
@@ -537,7 +535,42 @@ class DemuxUtils
 		return 1;
 	}
 
-	static int read_chunk_minf(QTMovieT qtmovie, int chunk_len)
+    /*
+     * chunk to offset box
+     */
+    private static void read_chunk_stco(QTMovieT qtmovie, int sub_chunk_len) {
+        //skip header and size
+        MyStream stream = qtmovie.qtstream;
+        StreamUtils.stream_skip(stream, 4);
+
+        int num_entries = StreamUtils.stream_read_uint32(stream);
+
+        qtmovie.res.stco = new int[num_entries];
+        for (int i = 0; i < num_entries; i++) {
+            qtmovie.res.stco[i] = StreamUtils.stream_read_uint32(stream);
+        }
+    }
+
+    /*
+     * sample to chunk box
+     */
+    private static void read_chunk_stsc(QTMovieT qtmovie, int sub_chunk_len) {
+        //skip header and size
+        MyStream stream = qtmovie.qtstream;
+        //skip version and other junk
+        StreamUtils.stream_skip(stream, 4);
+        int num_entries = StreamUtils.stream_read_uint32(stream);
+        qtmovie.res.stsc = new ChunkInfo[num_entries];
+        for (int i = 0; i < num_entries; i++) {
+            ChunkInfo entry = new ChunkInfo();
+            entry.first_chunk = StreamUtils.stream_read_uint32(stream);
+            entry.samples_per_chunk = StreamUtils.stream_read_uint32(stream);
+            entry.sample_desc_index = StreamUtils.stream_read_uint32(stream);
+            qtmovie.res.stsc[i] = entry;
+        }
+    }
+
+    static int read_chunk_minf(QTMovieT qtmovie, int chunk_len)
 	{
 		int dinf_size;
 		int stbl_size;

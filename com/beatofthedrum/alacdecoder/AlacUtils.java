@@ -18,7 +18,7 @@ public class AlacUtils
 		QTMovieT qtmovie = new QTMovieT();
 		DemuxResT demux_res = new DemuxResT();
 		AlacContext ac = new AlacContext();
-		java.io.DataInputStream input_stream;
+		AlacInputStream input_stream;
 		AlacFile alac = new AlacFile();
 		
 		ac.error = false;
@@ -27,7 +27,7 @@ public class AlacUtils
 		{
 			java.io.FileInputStream fistream;
 			fistream = new java.io.FileInputStream(inputfilename);
-			input_stream = new java.io.DataInputStream(fistream);
+			input_stream = new AlacInputStream(fistream);
 		}
 		catch (java.io.FileNotFoundException fe)
 		{
@@ -80,7 +80,7 @@ public class AlacUtils
 			{
 				java.io.FileInputStream fistream;
 				fistream = new java.io.FileInputStream(inputfilename);
-				input_stream = new java.io.DataInputStream(fistream);
+				input_stream = new AlacInputStream(fistream);
 				ac.input_stream = input_stream;
 				
 				qtmovie.qtstream.stream = input_stream;
@@ -286,4 +286,45 @@ public class AlacUtils
 		return 1;
 	}
 
+    /**
+     * sets position in pcm samples
+     * @param ac
+     * @param position
+     */
+
+    public static void AlacSetPosition(AlacContext ac, long position) {
+        DemuxResT res = ac.demux_res;
+
+        int current_position = 0;
+        int current_sample = 0;
+        SampleDuration sample_info = new SampleDuration();
+        for (int i = 0; i < res.stsc.length; i++) {
+            ChunkInfo chunkInfo = res.stsc[i];
+            int last_chunk;
+
+            if (i < res.stsc.length - 1) {
+                last_chunk = res.stsc[i + 1].first_chunk;
+            } else {
+                last_chunk = res.stco.length;
+            }
+
+            for (int chunk = chunkInfo.first_chunk; chunk <= last_chunk; chunk++) {
+                int pos = res.stco[chunk - 1];
+                int sample_count = chunkInfo.samples_per_chunk;
+                while (sample_count > 0) {
+                    int ret = get_sample_info(res, current_sample, sample_info);
+                    if (ret == 0) return;
+                    current_position += sample_info.sample_duration;
+                    if (position < current_position) {
+                        ac.input_stream.seek(pos);
+                        ac.current_sample_block = current_sample;
+                        return;
+                    }
+                    pos += sample_info.sample_byte_size;
+                    current_sample++;
+                    sample_count--;
+                }
+            }
+        }
+    }
 }
