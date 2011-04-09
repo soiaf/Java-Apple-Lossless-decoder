@@ -19,7 +19,6 @@ class QTMovieT
 
 	public QTMovieT()
 	{
-		res = new DemuxResT();
 		saved_mdat_pos = 0;
 		qtstream = new MyStream();
 	}

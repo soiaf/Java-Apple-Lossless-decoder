@@ -140,11 +140,10 @@ class AlacDecodeUtils
 			alac.input_buffer_bitaccumulator *= -1;
 	}
 
-	static LeadingZeros count_leading_zeros_extra(int curbyte, int output )
+	static LeadingZeros count_leading_zeros_extra(int curbyte, int output, LeadingZeros lz)
 	{
-		LeadingZeros lz = new LeadingZeros();
-			
-		if ((curbyte & 0xf0)==0)
+
+        if ((curbyte & 0xf0)==0)
 		{
 			output += 4;
 		}
@@ -183,16 +182,15 @@ class AlacDecodeUtils
 		return lz;
 
 	}
-	static int count_leading_zeros(int input ) 
+	static int count_leading_zeros(int input, LeadingZeros lz)
 	{
 		int output  = 0;
 		int curbyte  = 0;
-		LeadingZeros lz = new LeadingZeros();
 
-		curbyte = input >> 24;
+        curbyte = input >> 24;
 		if (curbyte != 0)
 		{
-			lz = count_leading_zeros_extra(curbyte, output);
+			count_leading_zeros_extra(curbyte, output, lz);
 			output = lz.output;
 			curbyte = lz.curbyte;
 			return output;
@@ -202,7 +200,7 @@ class AlacDecodeUtils
 		curbyte = input >> 16;
 		if ((curbyte & 0xFF) != 0)
 		{
-			lz = count_leading_zeros_extra(curbyte, output);
+			count_leading_zeros_extra(curbyte, output, lz);
 			output = lz.output;
 			curbyte = lz.curbyte;
 
@@ -213,7 +211,7 @@ class AlacDecodeUtils
 		curbyte = input >> 8;
 		if ((curbyte & 0xFF) != 0)
 		{
-			lz = count_leading_zeros_extra(curbyte, output);
+			count_leading_zeros_extra(curbyte, output, lz);
 			output = lz.output;
 			curbyte = lz.curbyte;
 
@@ -224,7 +222,7 @@ class AlacDecodeUtils
 		curbyte = input;
 		if ((curbyte & 0xFF) != 0)
 		{
-			lz = count_leading_zeros_extra(curbyte, output);
+			count_leading_zeros_extra(curbyte, output, lz);
 			output = lz.output;
 			curbyte = lz.curbyte;
 
@@ -287,7 +285,7 @@ class AlacDecodeUtils
 			int finalValue  = 0;
 			int k   = 0;
 
-			k = 31 - rice_kmodifier - count_leading_zeros((history >> 9) + 3);
+			k = 31 - rice_kmodifier - count_leading_zeros((history >> 9) + 3, alac.lz);
 
 			if (k < 0)
 				k += rice_kmodifier;
@@ -319,7 +317,7 @@ class AlacDecodeUtils
 
 				signModifier = 1;
 
-				k = count_leading_zeros(history) + ((history + 16) / 64) - 24;
+				k = count_leading_zeros(history, alac.lz) + ((history + 16) / 64) - 24;
 
 				// note: blockSize is always 16bit
 				blockSize = entropy_decode_value(alac, 16, k, rice_kmodifier_mask);
@@ -349,7 +347,7 @@ class AlacDecodeUtils
 	static int[] predictor_decompress_fir_adapt(int[] error_buffer, int output_size , int readsamplesize , int[] predictor_coef_table, int predictor_coef_num , int predictor_quantitization )
 	{
 		int buffer_out_idx  = 0;
-		int[] buffer_out = new int[65536];
+		int[] buffer_out;
 		int bitsmove  = 0;
 
 		/* first sample always copies */
@@ -361,10 +359,7 @@ class AlacDecodeUtils
 				return(buffer_out);
 			int sizeToCopy  = 0;
 			sizeToCopy = (output_size-1) * 4;
-			for (int j = 0; j < sizeToCopy; j++)
-			{
-				buffer_out[1 + j] = error_buffer[1 + j];
-			}
+            System.arraycopy(error_buffer, 1, buffer_out, 1, sizeToCopy);
 			return(buffer_out);
 		}
 
@@ -599,7 +594,7 @@ class AlacDecodeUtils
 	}
 
 
-	public static int decode_frame(AlacFile alac, int[] inbuffer, int[] outbuffer, int outputsize ) 	
+	public static int decode_frame(AlacFile alac, byte[] inbuffer, int[] outbuffer, int outputsize )
 	{
 		int channels ;
 		int outputsamples  = alac.setinfo_max_samples_per_frame;
@@ -650,7 +645,7 @@ class AlacDecodeUtils
 
 			if (isnotcompressed == 0)
 			{ // so it is compressed
-				int[] predictor_coef_table = new int[1024];
+				int[] predictor_coef_table = alac.predictor_coef_table;
 				int predictor_coef_num ;
 				int prediction_type ;
 				int prediction_quantitization ;
@@ -840,13 +835,13 @@ class AlacDecodeUtils
 
 			if (isnotcompressed == 0)
 			{ // compressed
-				int[] predictor_coef_table_a = new int[1024];
+				int[] predictor_coef_table_a = alac.predictor_coef_table_a;
 				int predictor_coef_num_a ;
 				int prediction_type_a ;
 				int prediction_quantitization_a ;
 				int ricemodifier_a ;
 
-				int[] predictor_coef_table_b = new int[1024];
+				int[] predictor_coef_table_b = alac.predictor_coef_table_b;
 				int predictor_coef_num_b ;
 				int prediction_type_b ;
 				int prediction_quantitization_b ;

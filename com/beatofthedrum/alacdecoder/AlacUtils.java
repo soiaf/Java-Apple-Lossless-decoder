@@ -19,7 +19,7 @@ public class AlacUtils
 		DemuxResT demux_res = new DemuxResT();
 		AlacContext ac = new AlacContext();
 		AlacInputStream input_stream;
-		AlacFile alac = new AlacFile();
+		AlacFile alac;
 		
 		ac.error = false;
 		
@@ -126,13 +126,11 @@ public class AlacUtils
 	
 	public static DecodeResult AlacUnpackSamples(AlacContext ac, int[] pDestBuffer)
 	{
-		int sample_duration = 0;
-		int sample_byte_size = 0;
+        int sample_byte_size;
 		SampleDuration sampleinfo = new SampleDuration();
-		int buffer_size = 1024 *80; // sample big enough to hold any input for a single alac frame
-		int[] buffer = new int[buffer_size];
+        byte[] read_buffer = ac.read_buffer;
 		int destBufferSize = 1024 *24 * 3; // 24kb buffer = 4096 frames = 1 alac sample (we support max 24bps)
-		int outputBytes = 0;
+		int outputBytes;
 		MyStream inputStream = new MyStream();
         DecodeResult result = new DecodeResult();
 		
@@ -140,7 +138,7 @@ public class AlacUtils
 		
 		// if current_sample_block is beyond last block then finished
 		
-		if(ac.current_sample_block >= ac.demux_res.num_sample_byte_sizes)
+		if(ac.current_sample_block >= ac.demux_res.sample_byte_size.length)
 		{
 			return result;
 		}
@@ -151,15 +149,14 @@ public class AlacUtils
 				return result;
 		}
 
-		sample_duration = sampleinfo.sample_duration;
-		sample_byte_size = sampleinfo.sample_byte_size;	
+        sample_byte_size = sampleinfo.sample_byte_size;
 
-		StreamUtils.stream_read(inputStream, sample_byte_size, buffer, 0);
+		StreamUtils.stream_read(inputStream, sample_byte_size, read_buffer, 0);
 		
 		/* now fetch */
 		outputBytes = destBufferSize;
 
-		outputBytes = AlacDecodeUtils.decode_frame(ac.alac, buffer, pDestBuffer, outputBytes);
+		outputBytes = AlacDecodeUtils.decode_frame(ac.alac, read_buffer, pDestBuffer, outputBytes);
 		
 		ac.current_sample_block = ac.current_sample_block + 1;
 		result.bytesUnpacked = outputBytes - ac.offset * AlacGetBytesPerSample(ac);
@@ -228,14 +225,14 @@ public class AlacUtils
     {
 		/* calculate output size */
 		int num_samples = 0;
-		int thissample_duration = 0;
+		int thissample_duration;
 		int thissample_bytesize = 0;
 		SampleDuration sampleinfo = new SampleDuration();
 		int i;
 		boolean error_found = false;
 		int retval = 0;
 			
-		for (i = 0; i < ac.demux_res.num_sample_byte_sizes; i++)
+		for (i = 0; i < ac.demux_res.sample_byte_size.length; i++)
 		{
 			thissample_duration = 0;
 			thissample_bytesize = 0;
@@ -261,7 +258,7 @@ public class AlacUtils
 		int duration_index_accum = 0;
 		int duration_cur_index = 0;
 
-		if (samplenum >= demux_res.num_sample_byte_sizes)
+		if (samplenum >= demux_res.sample_byte_size.length)
 		{
 			System.err.println("sample " + samplenum + " does not exist ");
 			return 0;
@@ -291,8 +288,8 @@ public class AlacUtils
 
     /**
      * sets position in pcm samples
-     * @param ac
-     * @param position
+     * @param ac alac context
+     * @param position position in pcm samples to go to
      */
 
     public static void AlacSetPosition(AlacContext ac, long position) {

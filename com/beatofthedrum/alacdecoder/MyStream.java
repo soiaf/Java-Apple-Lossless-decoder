@@ -15,4 +15,5 @@ class MyStream
 {
 	public java.io.DataInputStream stream;
 	public int currentPos = 0;
+    public byte[] read_buf = new byte[8];
 }

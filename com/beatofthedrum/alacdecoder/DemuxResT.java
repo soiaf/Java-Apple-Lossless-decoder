@@ -23,8 +23,7 @@ class DemuxResT
 	public SampleInfo[] time_to_sample = new SampleInfo[16];
 	public int num_time_to_samples;
 
-	public int[] sample_byte_size = new int[65536];
-	public int num_sample_byte_sizes;
+	public int[] sample_byte_size;
 
 	public int codecdata_len;
 

@@ -20,4 +20,5 @@ public class AlacContext
     int offset;
 	public boolean error;
 	public String error_message = "";
+    byte[] read_buffer = new byte[1024 *80]; // sample big enough to hold any input for a single alac frame
 }

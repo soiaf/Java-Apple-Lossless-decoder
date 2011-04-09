@@ -436,7 +436,7 @@ class DemuxUtils
 			
 			uniform_num = (StreamUtils.stream_read_uint32(qtmovie.qtstream));
 			
-			qtmovie.res.num_sample_byte_sizes = uniform_num;
+			qtmovie.res.sample_byte_size = new int[uniform_num];
 			
 			for (i = 0; i < uniform_num; i++)
 			{
@@ -459,7 +459,7 @@ class DemuxUtils
 
 		size_remaining -= 4;
 
-		qtmovie.res.num_sample_byte_sizes = numentries;
+		qtmovie.res.sample_byte_size = new int[numentries];
 
 		for (i = 0; i < numentries; i++)
 		{

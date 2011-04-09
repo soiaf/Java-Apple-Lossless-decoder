@@ -13,33 +13,35 @@ package com.beatofthedrum.alacdecoder;
 
 class StreamUtils
 {
-	public static void stream_read(MyStream mystream, int size, int[] buf, int startPos)
+    public static void stream_read(MyStream mystream, int size, int[] buf, int startPos) {
+        byte[] byteBuf = new byte[size];
+        int bytes_read = stream_read(mystream, size, byteBuf, 0);
+        for(int i=0; i < bytes_read; i++) {
+			buf[startPos + i] = byteBuf[i];
+		}
+    }
+
+	public static int stream_read(MyStream mystream, int size, byte[] buf, int startPos)
 	{
 		int bytes_read = 0;
-		byte[] bytebuf = new byte[size];
-		
+
 		try
 		{
-			bytes_read = mystream.stream.read(bytebuf, 0, size);
+			bytes_read = mystream.stream.read(buf, startPos, size);
 		}
 		catch (Exception err)
 		{
 			System.err.println("stream_read: exception thrown: " + err);
 		}
 		mystream.currentPos = mystream.currentPos + bytes_read;
-		
-		for(int i=0; i < bytes_read; i++)
-		{
-			buf[startPos + i] = bytebuf[i];
-		}
-
+        return bytes_read;
 	}
 
 	public static int stream_read_uint32(MyStream mystream)
 	{
 		int v = 0;
 		int tmp = 0;
-		byte[] bytebuf = new byte[4];
+		byte[] bytebuf = mystream.read_buf;
 		int bytes_read = 0;
 
 		try
@@ -86,7 +88,7 @@ class StreamUtils
 	{
 		int v = 0;
 		int tmp = 0;
-		byte[] bytebuf = new byte[2];
+		byte[] bytebuf = mystream.read_buf;
 		int bytes_read = 0;
 
 		try
@@ -110,7 +112,7 @@ class StreamUtils
 	{
 		int v = 0;
 		int bytes_read = 0;
-		byte[] bytebuf = new byte[1];
+		byte[] bytebuf = mystream.read_buf;
 		
 		try
 		{
@@ -127,62 +129,24 @@ class StreamUtils
 
 	public static void stream_skip(MyStream mystream, int skip)
 	{
-		byte[] bytebuf = new byte[8192];
-		int toskip = skip;
-		int toget = 0;
-		int bytes_read = 0;
-		int method_to_skip = 2;		// method used to skip data
+        int toskip = skip;
+        int bytes_read = 0;
 
-		if(toskip < 0)
+        if(toskip < 0)
 		{
 			System.err.println("stream_skip: request to seek backwards in stream - not supported, sorry");
 			return;
 		}
 
-		/*
-		** 3 ways to skip within file
-		** 1) read in chunks (ignoring data) till skip done
-		** 2) use skipBytes to skip required amount
-		** 3) with a stream that supports seeking, seek to new location
-		*/
-	
-		if(method_to_skip == 1)
-		{		
-			while(toskip > 0)
-			{
-				if(toskip > 8192)
-				{
-					toget = 8192;
-					toskip = toskip - 8192;
-				}
-				else
-				{
-					toget = toskip;
-					toskip = 0;
-				}
-
-				try
-				{
-					bytes_read = mystream.stream.read(bytebuf, 0, toget);
-					mystream.currentPos = mystream.currentPos + bytes_read;
-				}
-				catch (Exception e)
-				{
-				}
-			}
-		}
-		else if (method_to_skip == 2)
-		{
-			try
-			{
-				bytes_read = mystream.stream.skipBytes(toskip);
-				mystream.currentPos = mystream.currentPos + bytes_read;
-			}
-			catch (java.io.IOException ioe)
-			{
-			}
-		}
-	}
+        try
+        {
+            bytes_read = mystream.stream.skipBytes(toskip);
+            mystream.currentPos = mystream.currentPos + bytes_read;
+        }
+        catch (java.io.IOException ioe)
+        {
+        }
+    }
 
 	public static int stream_eof(MyStream mystream)
 	{

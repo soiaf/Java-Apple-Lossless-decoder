@@ -13,7 +13,7 @@ package com.beatofthedrum.alacdecoder;
 class AlacFile
 {
 
-	int input_buffer[] = new int[81920];
+	byte input_buffer[];
 	int ibIdx = 0;
 	int input_buffer_bitaccumulator = 0; /* used so we can do arbitary
 						bit reads */
@@ -22,16 +22,19 @@ class AlacFile
 	int numchannels = 0;
 	int bytespersample = 0;
 
+    LeadingZeros lz = new LeadingZeros();
 
-	/* buffers */
-	int predicterror_buffer_a[] = new int[65536];
-	int predicterror_buffer_b[] = new int[65536];
 
-	int outputsamples_buffer_a[] = new int[65536];
-	int outputsamples_buffer_b[] = new int[65536];
+    private int buffer_size = 16384;
+    /* buffers */
+	int predicterror_buffer_a[] = new int[buffer_size];
+	int predicterror_buffer_b[] = new int[buffer_size];
 
-	int uncompressed_bytes_buffer_a[] = new int[65536];
-	int uncompressed_bytes_buffer_b[] = new int[65536];
+	int outputsamples_buffer_a[] = new int[buffer_size];
+	int outputsamples_buffer_b[] = new int[buffer_size];
+
+	int uncompressed_bytes_buffer_a[] = new int[buffer_size];
+	int uncompressed_bytes_buffer_b[] = new int[buffer_size];
 
 
 
@@ -52,5 +55,8 @@ class AlacFile
 	/* bit rate (avarge)?? */
 	int setinfo_8a_rate = 0; // 0x0000ac44
 	/* end setinfo stuff */
- 
+
+    public int[] predictor_coef_table = new int[1024];
+    public int[] predictor_coef_table_a = new int[1024];
+    public int[] predictor_coef_table_b = new int[1024];
 }
