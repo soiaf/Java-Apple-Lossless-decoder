@@ -36,11 +36,6 @@ moov atom (and you have poor/non-existent seeking support)
 sample sizes.
 
 
-Please note: This code currently uses java.io.DataInputStream as the main stream object.
-This does not support seeking; the code is able to handle seeking in most cases using its
-own stream handling mechanisms.
-However it would be very straightforward to replace this with a stream object that does
-support seeking.
-
+Thanks to Denis Tulskiy for the contributions he made to the code.
 
 Please direct any questions or comments to beatofthedrum@gmail.com
