@@ -313,10 +313,9 @@ class DemuxUtils
 			/* EH?? spec doesn't say theres an extra 16 bits here.. but there is! */
 			StreamUtils.stream_read_uint16(qtmovie.qtstream);
 			entry_remaining -= 2;
-
-			qtmovie.res.num_channels = StreamUtils.stream_read_uint16(qtmovie.qtstream);
-
-			qtmovie.res.sample_size = StreamUtils.stream_read_uint16(qtmovie.qtstream);
+			
+			/* skip 4 - this is the top level num of channels and bits per sample */
+			StreamUtils.stream_skip(qtmovie.qtstream, 4);
 			entry_remaining -= 4;
 
 			/* compression id */
@@ -325,13 +324,9 @@ class DemuxUtils
 			StreamUtils.stream_read_uint16(qtmovie.qtstream);
 			entry_remaining -= 4;
 
-			/* sample rate - 32bit fixed point = 16bit?? */
-			qtmovie.res.sample_rate = StreamUtils.stream_read_uint16(qtmovie.qtstream);
-			entry_remaining -= 2;
-
-			/* skip 2 */
-			StreamUtils.stream_skip(qtmovie.qtstream, 2);
-			entry_remaining -= 2;
+			/* skip 4 - this is the top level sample rate */
+			StreamUtils.stream_skip(qtmovie.qtstream, 4);
+			entry_remaining -= 4;
 
 			/* remaining is codec data */
 
@@ -350,6 +345,34 @@ class DemuxUtils
 
 			StreamUtils.stream_read(qtmovie.qtstream, entry_remaining, qtmovie.res.codecdata, 12);	// codecdata buffer should be +12
 			entry_remaining -= entry_remaining;
+			
+			/* We need to read the bits per sample, number of channels and sample rate from the codec data i.e. the alac atom within 
+			** the stsd atom the 'alac' atom contains a number of pieces of information which we can skip just now, its processed later 
+			** in the alac_set_info() method. This atom contains the following information
+			** 
+			** samples_per_frame
+			** compatible version
+			** bits per sample
+			** history multiplier
+			** initial history
+			** maximum K
+			** channels
+			** max run
+			** max coded frame size
+			** bitrate
+			** sample rate
+			*/
+			int ptrIndex = 29;	// position of bits per sample
+			
+			qtmovie.res.sample_size = (qtmovie.res.codecdata[ptrIndex] & 0xff);
+			
+			ptrIndex = 33;	// position of num of channels
+			
+			qtmovie.res.num_channels = (qtmovie.res.codecdata[ptrIndex] & 0xff);
+			
+			ptrIndex  = 44;		// position of sample rate within codec data buffer
+			
+			qtmovie.res.sample_rate = (((qtmovie.res.codecdata[ptrIndex] & 0xff) << 24) | ((qtmovie.res.codecdata[ptrIndex+1] & 0xff) << 16) | ((qtmovie.res.codecdata[ptrIndex+2] & 0xff) << 8) | (qtmovie.res.codecdata[ptrIndex+3] & 0xff));
 
 			if (entry_remaining != 0)	// was comparing to null
 				StreamUtils.stream_skip(qtmovie.qtstream, entry_remaining);
