@@ -1,7 +1,7 @@
 /*
 ** DemuxUtils.java
 **
-** Copyright (c) 2011 Peter McQuillan
+** Copyright (c) 2011-2013 Peter McQuillan
 **
 ** All Rights Reserved.
 **                       
@@ -130,6 +130,10 @@ class DemuxUtils
 			}
 				/*  these following atoms can be skipped !!!! */
 			else if(chunk_id ==  MakeFourCC32(102,114,101,101))	// fourcc equals free
+			{
+				StreamUtils.stream_skip(qtmovie.qtstream, chunk_len - 8); // FIXME not 8
+			}
+			else if(chunk_id ==  MakeFourCC32(106,117,110,107))     // fourcc equals junk
 			{
 				StreamUtils.stream_skip(qtmovie.qtstream, chunk_len - 8); // FIXME not 8
 			}
@@ -859,6 +863,10 @@ class DemuxUtils
 			else if(sub_chunk_id ==  MakeFourCC32(105,111,100,115) )	// fourcc equals iods
 			{
 				read_chunk_iods(qtmovie, sub_chunk_len);
+			}
+			else if(sub_chunk_id ==  MakeFourCC32(102,114,101,101))     // fourcc equals free
+			{
+				StreamUtils.stream_skip(qtmovie.qtstream, sub_chunk_len - 8); // FIXME not 8
 			}
 			else
 			{

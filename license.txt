@@ -1,4 +1,4 @@
-Copyright (c) 2011 Peter McQuillan
+Copyright (c) 2011-2013 Peter McQuillan
 
 Based on the ALAC decoder - Copyright (c) 2005 David Hammerton
 
