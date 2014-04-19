@@ -1,7 +1,7 @@
 /*
 ** DemuxUtils.java
 **
-** Copyright (c) 2011-2013 Peter McQuillan
+** Copyright (c) 2011-2014 Peter McQuillan
 **
 ** All Rights Reserved.
 **                       
@@ -287,6 +287,7 @@ class DemuxUtils
 
 		for (i = 0; i < numentries; i++)
 		{
+			/* parse the alac atom contained within the stsd atom */
 			int entry_size;
 			int version;
 
@@ -296,6 +297,12 @@ class DemuxUtils
 			qtmovie.res.format = StreamUtils.stream_read_uint32(qtmovie.qtstream);
 			entry_remaining = entry_size;
 			entry_remaining -= 8;
+
+			if(qtmovie.res.format != MakeFourCC32(97,108,97,99) )	// "alac" ascii values
+			{
+				System.err.println("(read_chunk_stsd) error reading description atom - expecting alac, got " + SplitFourCC(qtmovie.res.format));
+				return 0;
+			}
 
 			/* sound info: */
 
@@ -336,6 +343,12 @@ class DemuxUtils
 
 			/* 12 = audio format atom, 8 = padding */
 			qtmovie.res.codecdata_len = entry_remaining + 12 + 8;
+
+			if(qtmovie.res.codecdata_len > qtmovie.res.codecdata.length)
+			{
+                                System.err.println("(read_chunk_stsd) unexpected codec data length read from atom " + qtmovie.res.codecdata_len);
+                                return 0;
+			}
 
 			for (int count = 0; count < qtmovie.res.codecdata_len; count++)
 			{
